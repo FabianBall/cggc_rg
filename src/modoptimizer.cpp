@@ -27,11 +27,11 @@ ModOptimizer::~ModOptimizer() {
     delete clusters_;
 }
 
-Partition* ModOptimizer::get_clusters() {
+Partition* ModOptimizer::GetClusters() {
     return clusters_;
 }
 
-double ModOptimizer::ClusterRG(int k, int runs) {
+void ModOptimizer::ClusterRG(int k, int runs) {
     Partition* best_partition = NULL;
     double best_q = -1;
 
@@ -50,10 +50,9 @@ double ModOptimizer::ClusterRG(int k, int runs) {
 
     clusters_ = RefineCluster(graph_, best_partition);
     delete best_partition;
-    return best_q;
 }
 
-double ModOptimizer::ClusterCGGC(int initclusters, int restartk,
+void ModOptimizer::ClusterCGGC(int initclusters, int restartk,
         bool iterative) {
     Partition* clusterings[initclusters];
     Partition* unjoined_clusters[initclusters];

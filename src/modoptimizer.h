@@ -28,10 +28,10 @@ public:
     ModOptimizer(Graph* graph);
     virtual ~ModOptimizer();
 
-    Partition* get_clusters();
+    Partition* GetClusters();
 
-    double ClusterRG(int sample_size, int runs);
-    double ClusterCGGC(int ensemble_size, int sample_size_restart,
+    void ClusterRG(int sample_size, int runs);
+    void ClusterCGGC(int ensemble_size, int sample_size_restart,
         bool iterative);
     double GetModularityFromClustering(Graph* graph, Partition* clusters);
 
