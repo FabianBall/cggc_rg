@@ -54,53 +54,51 @@ void ModOptimizer::ClusterRG(int k, int runs) {
 
 void ModOptimizer::ClusterCGGC(int initclusters, int restartk,
         bool iterative) {
-    Partition* clusterings[initclusters];
-    Partition* unjoined_clusters[initclusters];
+    Partition* currentCluster;
+    Partition* lastCluster;
+    Partition* tmpCluster;
 
     ClusterRG(1, 1);
-    unjoined_clusters[0] = clusters_;
+    lastCluster = clusters_;
     for (int i = 1; i < initclusters; i++) {
         ClusterRG(1, 1);
-        clusterings[i] = clusters_;
-        unjoined_clusters[i] = CompareClusters(graph_, unjoined_clusters[i - 1],
-                                               clusterings[i]);
+        currentCluster = clusters_;
+        tmpCluster = CompareClusters(graph_, lastCluster, currentCluster);
 
-        delete clusterings[i];
-        delete unjoined_clusters[i - 1];
+        delete currentCluster;
+        delete lastCluster;
+        lastCluster = tmpCluster;
     }
 
-    Partition* tmp_clustering = unjoined_clusters[initclusters - 1];
+    Partition* bestClustering = lastCluster;
 
     if (iterative) {
-        double cur_q = GetModularityFromClustering(graph_, tmp_clustering);
+        double cur_q = GetModularityFromClustering(graph_, bestClustering);
         double last_q = 0;
 
         while ((cur_q - last_q) > 0.0001) {
-            unjoined_clusters[0] = PerformJoinsRestart(graph_, tmp_clustering, 1);
+            lastCluster = PerformJoinsRestart(graph_, bestClustering, 1);
             for (int i = 1; i < initclusters; i++) {
-                clusterings[i] = PerformJoinsRestart(graph_, tmp_clustering, 1);
-                unjoined_clusters[i] = CompareClusters(graph_,
-                        unjoined_clusters[i - 1], clusterings[i]);
+                currentCluster = PerformJoinsRestart(graph_, bestClustering, 1);
+                tmpCluster = CompareClusters(graph_, lastCluster, currentCluster);
 
-                delete clusterings[i];
-                delete unjoined_clusters[i - 1];
+                delete currentCluster;
+                delete lastCluster;
+                lastCluster = tmpCluster;
             }
             last_q = cur_q;
-            cur_q = GetModularityFromClustering(graph_,
-                    unjoined_clusters[initclusters - 1]);
-
+            cur_q = GetModularityFromClustering(graph_, lastCluster);
 
             if (cur_q > last_q) {
-                delete tmp_clustering;
-                tmp_clustering = unjoined_clusters[initclusters - 1];
+                delete bestClustering;
+                bestClustering = lastCluster;
             } else
-                delete unjoined_clusters[initclusters - 1];
+                delete lastCluster;
         }
     }
 
-    Partition* joinrestartclusters = PerformJoinsRestart(graph_, tmp_clustering,
-                                                         restartk);
-    delete tmp_clustering;
+    Partition* joinrestartclusters = PerformJoinsRestart(graph_, bestClustering, restartk);
+    delete bestClustering;
     Partition* result = RefineCluster(graph_, joinrestartclusters);
     delete joinrestartclusters;
     clusters_ = result;
@@ -218,6 +216,7 @@ double ModOptimizer::PerformJoins(int sample_size) {
                 double delta_q = 2 * (value - cluster_matrix.GetRowSum(row_num)*
                         cluster_matrix.GetRowSum(column_num));
 
+				// TODO: Handle delta_q == max_delta_q!
                 if (delta_q > max_delta_q) {
                     max_delta_q = delta_q;
                     if (cluster_matrix.GetRowEntries(row_num) >=
