@@ -110,7 +110,7 @@ double ModOptimizer::ClusterCGGC(int initclusters, int restartk,
 vector<int>* ModOptimizer::GetMembershipFromPartition(Partition* partition,
                                                      int vertex_count) {
     vector<int>* membership = new vector<int>(vertex_count);
-    for (int i = 0; i < partition->get_partition_vector()->size(); i++) {
+    for (size_t i = 0; i < partition->get_partition_vector()->size(); i++) {
         list<int>* cluster = partition->get_partition_vector()->at(i);
         BOOST_FOREACH(int vertex_id, *cluster) {
             membership->at(vertex_id) = i;
@@ -132,7 +132,7 @@ Partition* ModOptimizer::CompareClusters(Graph* graph,
     std::vector<bool> assigned(graph->get_vertex_count(), false);
 
     list<int>* newcluster = NULL;
-    for (int i = 0; i < partition1->get_partition_vector()->size(); i++) {
+    for (size_t i = 0; i < partition1->get_partition_vector()->size(); i++) {
         list<int>* cluster = partition1->get_partition_vector()->at(i);
         BOOST_FOREACH(int vertex1, *cluster) {
             if (!assigned[vertex1]) {
@@ -233,7 +233,7 @@ double ModOptimizer::PerformJoins(int sample_size) {
             }
 
             if (sample_num == max_sample - 1 && max_delta_q < 0 &&
-                    max_sample < graph_->get_vertex_count() - 1 - step)
+                    max_sample < graph_->get_vertex_count() - 1 - step) {
                 
                 if(max_sample < graph_->get_vertex_count()/2)
                     max_sample++;
@@ -241,6 +241,7 @@ double ModOptimizer::PerformJoins(int sample_size) {
                     max_sample = graph_->get_vertex_count() - 1 - step;
                     sample_num = 1;
                 }    
+			}
         }
         
         // if there is no valid merge, stop merge process
@@ -271,7 +272,7 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
     SparseClusteringMatrix cluster_matrix(graph, clusters);
     ActiveRowSet active_rows(clusters);
 
-    int dimension = clusters->get_partition_vector()->size();
+    uint dimension = clusters->get_partition_vector()->size();
     vector<pair<int, int> > joins(dimension - 1);
 
     int best_step = -1;
@@ -282,10 +283,10 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
     //**********
     // perform joins
     //**********
-    for (int step = 0; step < clusters->get_partition_vector()->size() - 1; step++) {
+    for (size_t step = 0; step < clusters->get_partition_vector()->size() - 1; step++) {
 
         int max_sample = k_restart_;
-        if (k_restart_ < (clusters->get_partition_vector()->size() - 1 - step)) {
+        if ((uint)k_restart_ < (clusters->get_partition_vector()->size() - 1 - step)) {
             max_sample = k_restart_;
         } else {
             max_sample = clusters->get_partition_vector()->size() - 1 - step;
@@ -301,7 +302,7 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
         max_delta_q = -1;
         for (int sample_num = 0; sample_num < max_sample; sample_num++) {
             int row_num;
-            if (max_sample == clusters->get_partition_vector()->size() - 1 - step)
+            if ((uint)max_sample == clusters->get_partition_vector()->size() - 1 - step)
                 row_num = active_rows.Get(sample_num);
             else
                 row_num = active_rows.GetRandomElement();
@@ -330,7 +331,7 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
                 }
             }
             if (sample_num == max_sample - 1 && max_delta_q < 0 &&
-                    max_sample < dimension - 1 - step)
+                    (uint)max_sample < dimension - 1 - step)
                 max_sample++;
         }
 
@@ -376,7 +377,7 @@ Partition* ModOptimizer::GetPartitionFromJoins(
             result_partition->get_partition_vector()->push_back(vlist);
         }
 
-        for (int i = 0; i < partial_partition->get_partition_vector()->size(); i++) {
+        for (size_t i = 0; i < partial_partition->get_partition_vector()->size(); i++) {
             // the first element of the list determines where to put the list
             int pos = *(partial_partition->get_partition_vector()->at(i)->begin());
             BOOST_FOREACH(int vertex,
@@ -434,7 +435,7 @@ Partition* ModOptimizer::RefineCluster(Graph* graph, Partition* clusters) {
 
     for (int i = 0; i < graph->get_vertex_count(); i++) {
         vector<int>* neighbors = graph->GetNeighbors(i);
-        for (int j = 0; j < neighbors->size(); j++) {
+        for (size_t j = 0; j < neighbors->size(); j++) {
             int neighbor_id = neighbors->at(j);
             if (i == neighbor_id) continue;
 
@@ -499,7 +500,7 @@ Partition* ModOptimizer::RefineCluster(Graph* graph, Partition* clusters) {
                 clusterdegree[best_move_cluster] +=
                         graph->GetNeighbors(vertex_id)->size();
 
-                for (int i = 0; i < graph->GetNeighbors(vertex_id)->size(); i++) {
+                for (size_t i = 0; i < graph->GetNeighbors(vertex_id)->size(); i++) {
                     int neighborid = graph->GetNeighbors(vertex_id)->at(i);
 
                     links[neighborid][current_cluster_id]--;
@@ -551,7 +552,7 @@ double ModOptimizer::GetModularityFromClustering(Graph* graph,
     int edge_count = 0; // will be 2*|E|
     for (int i = 0; i < graph->get_vertex_count(); i++) {
         vector<int>* neighbors = graph->GetNeighbors(i);
-        for (int j = 0; j < neighbors->size(); j++) {
+        for (size_t j = 0; j < neighbors->size(); j++) {
             if (i == neighbors->at(j)) continue; // disregard loops
 
             int from = clustermap[i];
@@ -584,7 +585,7 @@ double ModOptimizer::GetModularityFromClustering(Graph* graph,
 	else
 		Q += 0 - a[i] * a[i];
 
-    for (int i = 0; i < e.size(); i++)
+    for (size_t i = 0; i < e.size(); i++)
         delete e[i];
 
     return Q;

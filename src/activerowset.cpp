@@ -26,7 +26,7 @@ ActiveRowSet::ActiveRowSet(int size) {
 ActiveRowSet::ActiveRowSet(Partition* clusters) {
     elements_.resize(clusters->get_partition_vector()->size());
 
-    for (int i = 0; i < clusters->get_partition_vector()->size(); i++) {
+    for (size_t i = 0; i < clusters->get_partition_vector()->size(); i++) {
         elements_[i] = *(clusters->get_partition_vector()->at(i)->begin());
         element_lookup_[*(clusters->get_partition_vector()->at(i)->begin())] = i;
     }

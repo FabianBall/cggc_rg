@@ -164,7 +164,7 @@ void Graph::LoadSubgraph(Graph* ingraph, t_id_list* vertexlist) {
         vector<int>* t_neighbors = ingraph->GetNeighbors(vertex_id);
         int from = reverse_mapping->at(vertex_id);
 
-        for (int j = 0; j < t_neighbors->size(); j++) {
+        for (size_t j = 0; j < t_neighbors->size(); j++) {
             // if edge goes to vertex outside of sub-group of vertices (vertexlist) ignore this edge
             if (reverse_mapping->find(t_neighbors->at(j)) == reverse_mapping->end())
                 continue;
@@ -202,7 +202,7 @@ void recursive_visit(Graph* graph, t_id_list* cluster, int i, std::vector<bool>*
 
     cluster->push_back(i);
     visited->at(i) = true;
-    for (int n = 0; n < graph->GetNeighbors(i)->size(); n++)
+    for (size_t n = 0; n < graph->GetNeighbors(i)->size(); n++)
         if (!visited->at(graph->GetNeighbors(i)->at(n)))
             recursive_visit(graph, cluster, graph->GetNeighbors(i)->at(n), visited);
 }

@@ -20,12 +20,23 @@ Partition::Partition(int size) {
 }
 
 Partition::~Partition() {
-    for (int i = 0; i<this->partition_vector_.size(); i++)
+    for (size_t i = 0; i<this->partition_vector_.size(); i++)
         delete partition_vector_[i];
 }
 
+void Partition::print() {
+	std::ostream file(std::cout.rdbuf());
+    for (size_t i = 0; i<partition_vector_.size(); i++) {
+        list<int>* cluster = partition_vector_[i];
+        BOOST_FOREACH(int vertexid, *cluster) {   
+            file << vertexid << " ";
+        }
+        file << std::endl;
+    }
+}
+
 void Partition::print(std::ostream file) {
-    for (int i = 0; i<partition_vector_.size(); i++) {
+    for (size_t i = 0; i<partition_vector_.size(); i++) {
         list<int>* cluster = partition_vector_[i];
         BOOST_FOREACH(int vertexid, *cluster) {   
             file << vertexid << " ";

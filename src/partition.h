@@ -25,7 +25,8 @@ public:
     virtual ~Partition();
 
     void RemoveEmptyEntries();
-    void print(ostream file = std::cout);
+    void print();
+    void print(ostream file);
     
     t_partition* get_partition_vector();
 
