@@ -178,7 +178,7 @@ double ModOptimizer::PerformJoins(int sample_size) {
 
     for (int step = 0; step < graph_->get_vertex_count() - 1; step++) {
 
-        int max_sample = sample_size;
+        int max_sample;
         if (sample_size < graph_->get_vertex_count() / 2) {
             max_sample = 1;
         } else if (sample_size < (graph_->get_vertex_count() - 1 - step)) {
@@ -187,16 +187,14 @@ double ModOptimizer::PerformJoins(int sample_size) {
             max_sample = graph_->get_vertex_count() - 1 - step;
         }
 
-
         // *******
         // find join
         // *******
 
         double max_delta_q = -1;
-        int join_a = -1; //  the two clusters to join
-        int join_b = -1;
-
-        max_delta_q = -1;
+        max_delta_q = -1;        
+        vector< pair<int, int> > bestJoins;  // Save equivalent joins
+        
         for (int sample_num = 0; sample_num < max_sample; sample_num++) {
 
             int row_num;
@@ -204,7 +202,7 @@ double ModOptimizer::PerformJoins(int sample_size) {
                 row_num = active_rows.Get(sample_num);
             else
                 row_num = active_rows.GetRandomElement();
-
+             
             t_row_value_map* sample_row = cluster_matrix.GetRow(row_num);
 
             for (t_row_value_map::iterator entry = sample_row->begin(); entry != sample_row->end(); ++entry) {
@@ -216,43 +214,37 @@ double ModOptimizer::PerformJoins(int sample_size) {
                 double delta_q = 2 * (value - cluster_matrix.GetRowSum(row_num)*
                         cluster_matrix.GetRowSum(column_num));
 
-				// TODO: Handle delta_q == max_delta_q!
-                if (delta_q > max_delta_q) {
+                if (delta_q >= max_delta_q) {
+					// Found a better delta_q => delete previous results
+					if (delta_q > max_delta_q)
+						bestJoins.clear();
+					
                     max_delta_q = delta_q;
+                    // Save the join to our collection
                     if (cluster_matrix.GetRowEntries(row_num) >=
                             cluster_matrix.GetRowEntries(column_num)) {
-                        join_a = row_num;
-                        join_b = column_num;
+                        bestJoins.push_back(make_pair(row_num, column_num));
                     } else {
-                        join_a = column_num;
-                        join_b = row_num;
+                        bestJoins.push_back(make_pair(column_num, row_num));
                     }
                 }
             }
-
-            if (sample_num == max_sample - 1 && max_delta_q < 0 &&
-                    max_sample < graph_->get_vertex_count() - 1 - step) {
-                
-                if(max_sample < graph_->get_vertex_count()/2)
-                    max_sample++;
-                else {
-                    max_sample = graph_->get_vertex_count() - 1 - step;
-                    sample_num = 1;
-                }    
-			}
         }
         
         // if there is no valid merge, stop merge process
         // (can only occur for unconnected graph)
-        if (join_a == -1) break; 
+        if (bestJoins.size() == 0) break;
+        
+        // Get random join from all found equivalent joins
+        int sel = rand() % bestJoins.size();
+        pair<int, int> join = bestJoins.at(sel);
                 
         // *******
         // execute join
         // *******
-        cluster_matrix.JoinCluster(join_a, join_b);
-        active_rows.Remove(join_b);
-        joins[step].first = join_a;
-        joins[step].second = join_b;
+        cluster_matrix.JoinCluster(join.first, join.second);
+        active_rows.Remove(join.second);
+        joins[step] = join;
         Q += max_delta_q;
 
         if (Q > best_step_q) {
@@ -283,7 +275,7 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
     //**********
     for (size_t step = 0; step < clusters->get_partition_vector()->size() - 1; step++) {
 
-        int max_sample = k_restart_;
+        int max_sample;
         if ((uint)k_restart_ < (clusters->get_partition_vector()->size() - 1 - step)) {
             max_sample = k_restart_;
         } else {
@@ -294,10 +286,9 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
         // find join
         // *******
         double max_delta_q = -1;
-        int join_a = -1; //  the two clusters to join
-        int join_b = -1;
-
-        max_delta_q = -1;
+		max_delta_q = -1;
+        vector< pair<int, int> > bestJoins;  // Save equivalent joins
+        
         for (int sample_num = 0; sample_num < max_sample; sample_num++) {
             int row_num;
             if ((uint)max_sample == clusters->get_partition_vector()->size() - 1 - step)
@@ -316,15 +307,19 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
 
                 double delta_q = 2 * (value - cluster_matrix.GetRowSum(row_num)
                         * cluster_matrix.GetRowSum(column_num));
-                if (delta_q > max_delta_q) {
+                        
+                if (delta_q >= max_delta_q) {
+					// Found a better delta_q => delete previous results
+					if (delta_q > max_delta_q)
+						bestJoins.clear();
+					
                     max_delta_q = delta_q;
+                    // Save the join to our collection
                     if (cluster_matrix.GetRowEntries(row_num) >=
                             cluster_matrix.GetRowEntries(column_num)) {
-                        join_a = row_num;
-                        join_b = column_num;
+                        bestJoins.push_back(make_pair(row_num, column_num));
                     } else {
-                        join_a = column_num;
-                        join_b = row_num;
+                        bestJoins.push_back(make_pair(column_num, row_num));
                     }
                 }
             }
@@ -335,15 +330,18 @@ Partition* ModOptimizer::PerformJoinsRestart(Graph* graph, Partition* clusters,
 
         // if there is no valid merge, stop merge process
         // (can only occur for unconnected graph)
-        if (join_a == -1) break;
+        if (bestJoins.size() == 0) break;
+        
+        // Get random join from all found equivalent joins
+        int sel = rand() % bestJoins.size();
+        pair<int, int> join = bestJoins.at(sel);
         
         // *******
         // execute join
         // *******
-        cluster_matrix.JoinCluster(join_a, join_b);
-        active_rows.Remove(join_b);
-        joins[step].first = join_a;
-        joins[step].second = join_b;
+        cluster_matrix.JoinCluster(join.first, join.second);
+        active_rows.Remove(join.second);
+        joins[step] = join;
         modularity += max_delta_q;
 
         if (modularity > best_step_q) {
