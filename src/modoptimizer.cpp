@@ -520,6 +520,8 @@ Partition* ModOptimizer::RefineCluster(Graph* graph, Partition* clusters) {
         list<int>* cluster = resultclusters->get_partition_vector()->at(x);
         cluster->push_back(i);
     }
+    
+    resultclusters->RemoveEmptyEntries();
 
     return resultclusters;
 }
