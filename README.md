@@ -19,7 +19,7 @@ The original code can be found here http://www.umiacs.umd.edu/~mov/ and the copy
 The purpose for this repository is to maintain a version of the source code which 
 - does not throw errors/warnings using current compilers and library versions
 - is correctly implemented in terms of the published description of the algorithm
-- can be used by the Python binding [pycggcrg](https://github.com/FabianBall/pycggcrg) which allows calling the different algorithms directly from Python
+- can be used by the Python binding [pycggcrg](https://github.com/KIT-IISM-EM/pycggcrg) which allows calling the different algorithms directly from Python
 
 ## References
 > Ovelgönne, Michael, and Andreas Geyer-Schulz. 2013. “An Ensemble Learning Strategy for Graph Clustering.” In Graph Partitioning and Graph Clustering, edited by David A. Bader, Henning Meyerhenke, Peter Sanders, and Dorothea Wagner, 588:187 – 205. Contemporary Mathematics. Providence: American Mathematical Society.
